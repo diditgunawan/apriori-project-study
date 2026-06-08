@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import math
 import time
 from typing import Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
@@ -95,13 +96,16 @@ def _count_candidates_in_partition(
     For each transaction, find which broadcast candidates are subsets of it
     and emit (candidate, 1).  Transactions shorter than k are skipped.
     """
-    candidates: List[Itemset] = bc_candidates.value
+    candidates: Set[Itemset] = bc_candidates.value
     for txn in transactions:
         if len(txn) < k:
             continue
-        txn_set = frozenset(txn)
-        for cand in candidates:
-            if cand.issubset(txn_set):
+
+        # Count by generating transaction combinations and checking candidate
+        # membership. This avoids scanning every candidate for every row.
+        for comb in itertools.combinations(txn, k):
+            cand = frozenset(comb)
+            if cand in candidates:
                 yield (cand, 1)
 
 
@@ -160,7 +164,7 @@ def phase2_iterative(
         logger.info("k=%d: %d candidates generated.", k, len(ck))
 
         # --- broadcast candidates to executors ---
-        bc_ck = sc.broadcast(ck)
+        bc_ck = sc.broadcast(set(ck))
 
         # --- distributed counting ---
         lk: FreqDict = (
@@ -262,7 +266,7 @@ class DistributedApriori:
 
     def min_support_from_ratio(self, ratio: float) -> int:
         """Convert a relative support threshold (0–1) to an absolute count."""
-        return max(1, int(ratio * self._n_transactions))
+        return max(1, math.ceil(ratio * self._n_transactions))
 
     # ------------------------------------------------------------------
     # Main run
@@ -310,3 +314,39 @@ class DistributedApriori:
             )
             print(f"  L{k}: {len(freq)} itemsets  | top-5: {top_str}")
         print(f"{'='*60}\n")
+
+
+def run_simple_simulation() -> None:
+    """Run a tiny in-memory simulation to validate the Apriori flow quickly."""
+    from spark_session import create_spark_session
+
+    spark = create_spark_session(app_name="apriori-simple-simulation")
+    spark.sparkContext.setLogLevel("WARN")
+
+    # Simple toy transactions used for quick correctness checks.
+    txns = [
+        (0, (1, 2, 3)),
+        (1, (1, 2)),
+        (2, (1, 3)),
+        (3, (2, 3)),
+        (4, (1, 2, 3)),
+    ]
+
+    rdd = spark.sparkContext.parallelize(txns).map(lambda x: x[1]).cache()
+    min_support = 2
+
+    l1 = phase1_generate_l1(rdd, min_support=min_support)
+    all_freq = phase2_iterative(rdd, l1, min_support=min_support, max_k=3)
+
+    print("Simple simulation result (min_support=2):")
+    for k in sorted(all_freq):
+        print(f"L{k} ({len(all_freq[k])} itemsets)")
+        top = sorted(all_freq[k].items(), key=lambda kv: kv[1], reverse=True)
+        for itemset, count in top:
+            print(f"  {sorted(itemset)} -> {count}")
+
+    spark.stop()
+
+
+if __name__ == "__main__":
+    run_simple_simulation()

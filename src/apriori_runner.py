@@ -42,6 +42,10 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from apriori_distributed import DistributedApriori   # noqa: E402  (after sys.path)
+from report_generation import (                        # noqa: E402
+    build_apriori_markdown_report,
+    save_markdown_report,
+)
 from spark_session import create_spark_session        # noqa: E402
 
 
@@ -122,59 +126,46 @@ def run_benchmark() -> None:
 
 
 def _write_results_md(results: list[dict], n_txn: int) -> None:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    lines: list[str] = [
-        "# Distributed Apriori — Benchmark Results",
-        "",
-        f"**Run date:** {now}  ",
-        f"**Dataset:** Online Retail (~{n_txn:,} transactions)  ",
-        f"**Engine:** PySpark (local[*])  ",
-        "",
-        "---",
-        "",
-        "## Execution Time vs. Minimum Support",
-        "",
-        "| Min Support (%) | Abs. Support | Total Freq. Itemsets | Max k | Elapsed (s) |",
-        "|-----------------|-------------|----------------------|-------|-------------|",
+    import pandas as pd
+
+    execution_df = pd.DataFrame(
+        [
+            {
+                "min_support": r["ratio"],
+                "abs_support_count": r["abs_support"],
+                "execution_time_sec": r["elapsed_s"],
+                "l1_count": r["per_k"].get(1, 0),
+                "l2_count": r["per_k"].get(2, 0),
+                "l3_count": r["per_k"].get(3, 0),
+            }
+            for r in results
+        ]
+    )
+
+    notes: list[str] = [
+        f"Engine: PySpark (local[*])",
+        f"Dataset size: ~{n_txn:,} transactions",
+        "Execution time increases as minimum support decreases.",
+        "Broadcast-based counting avoids full transaction shuffles.",
+        "Transactions are cached and reused across thresholds.",
     ]
+
     for r in results:
-        lines.append(
-            f"| {r['ratio']*100:.1f}% "
-            f"| {r['abs_support']:,} "
-            f"| {r['total_freq']:,} "
-            f"| {r['max_k']} "
-            f"| {r['elapsed_s']:.3f} |"
+        per_k_text = ", ".join(
+            [f"L{k}={cnt:,}" for k, cnt in sorted(r["per_k"].items())]
+        )
+        notes.append(
+            f"Support {r['ratio']*100:.1f}% (abs={r['abs_support']:,}): {per_k_text}"
         )
 
-    lines += [
-        "",
-        "---",
-        "",
-        "## Per-k Breakdown",
-        "",
-    ]
-    for r in results:
-        lines.append(f"### Support = {r['ratio']*100:.1f}%  (abs={r['abs_support']:,})")
-        lines.append("")
-        lines.append("| k | Frequent Itemsets |")
-        lines.append("|---|-------------------|")
-        for k, cnt in sorted(r["per_k"].items()):
-            lines.append(f"| {k} | {cnt:,} |")
-        lines.append("")
+    content = build_apriori_markdown_report(
+        title="Distributed Apriori - Benchmark Results",
+        dataset_name="Online Retail",
+        execution_df=execution_df,
+        notes=notes,
+    )
 
-    lines += [
-        "---",
-        "",
-        "## Observations",
-        "",
-        "- Execution time increases significantly as min_support decreases.",
-        "- The broadcast-based approach avoids full shuffles during candidate counting.",
-        "- Integer encoding of items reduces memory overhead on executors.",
-        "- Transactions are cached once and reused across all threshold runs.",
-        "",
-    ]
-
-    RESULT_MD.write_text("\n".join(lines), encoding="utf-8")
+    save_markdown_report(content, RESULT_MD)
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,65 @@
+2026-05-06 15:03:42,412  INFO      __main__ — Loading transactions from /home/komputer7/SparkProjects/online-retail-pyspark/data/staging/online_retail.csv …
+2026-05-06 15:03:52,750  INFO      apriori_distributed — Loaded 20728 transactions, 3941 unique items.
+2026-05-06 15:03:52,751  INFO      __main__ — Dataset: 20728 transactions.
+2026-05-06 15:03:52,751  INFO      __main__ — 
+============================================================
+Running Apriori  support=5.0%  (abs=1036)
+============================================================
+2026-05-06 15:03:53,371  INFO      apriori_distributed — Phase 1 complete: 33 frequent 1-itemsets.
+2026-05-06 15:03:53,372  INFO      apriori_distributed — k=2: 528 candidates generated.
+2026-05-06 15:03:53,829  INFO      py4j.clientserver — Closing down clientserver connection
+2026-05-06 15:04:30,059  INFO      __main__ — Loading transactions from /home/komputer7/SparkProjects/online-retail-pyspark/data/staging/online_retail.csv …
+2026-05-06 15:04:39,948  INFO      apriori_distributed — Loaded 20728 transactions, 3941 unique items.
+2026-05-06 15:04:39,950  INFO      __main__ — Dataset: 20728 transactions.
+2026-05-06 15:04:39,950  INFO      __main__ — 
+============================================================
+Running Apriori  support=5.0%  (abs=1036)
+============================================================
+2026-05-06 15:04:40,729  INFO      apriori_distributed — Phase 1 complete: 33 frequent 1-itemsets.
+2026-05-06 15:04:40,730  INFO      apriori_distributed — k=2: 528 candidates generated.
+2026-05-06 15:04:41,411  INFO      apriori_distributed — k=2: no frequent itemsets — stopping.
+2026-05-06 15:04:41,412  INFO      __main__ —   → support=5.0%  elapsed=1.461s  frequent=33  max_k=1
+2026-05-06 15:04:41,412  INFO      __main__ — 
+============================================================
+Running Apriori  support=2.0%  (abs=414)
+============================================================
+2026-05-06 15:04:42,101  INFO      apriori_distributed — Phase 1 complete: 276 frequent 1-itemsets.
+2026-05-06 15:04:42,202  INFO      apriori_distributed — k=2: 37950 candidates generated.
+2026-05-06 15:05:02,144  INFO      apriori_distributed — k=2: 79 frequent itemsets found.
+2026-05-06 15:05:02,146  INFO      apriori_distributed — k=3: 55 candidates generated.
+2026-05-06 15:05:02,714  INFO      apriori_distributed — k=3: 1 frequent itemsets found.
+2026-05-06 15:05:02,714  INFO      apriori_distributed — k=4: no candidates generated — stopping.
+2026-05-06 15:05:02,715  INFO      __main__ —   → support=2.0%  elapsed=21.303s  frequent=356  max_k=3
+2026-05-06 15:05:02,715  INFO      __main__ — 
+============================================================
+Running Apriori  support=1.0%  (abs=207)
+============================================================
+2026-05-06 15:05:03,313  INFO      apriori_distributed — Phase 1 complete: 792 frequent 1-itemsets.
+2026-05-06 15:05:03,969  INFO      apriori_distributed — k=2: 313236 candidates generated.
+2026-05-06 15:07:49,262  INFO      apriori_distributed — k=2: 827 frequent itemsets found.
+2026-05-06 15:07:49,296  INFO      apriori_distributed — k=3: 2584 candidates generated.
+2026-05-06 15:07:50,010  INFO      apriori_distributed — k=3: 220 frequent itemsets found.
+2026-05-06 15:07:50,013  INFO      apriori_distributed — k=4: 102 candidates generated.
+2026-05-06 15:07:50,494  INFO      apriori_distributed — k=4: 18 frequent itemsets found.
+2026-05-06 15:07:50,494  INFO      apriori_distributed — k=5: 1 candidates generated.
+2026-05-06 15:07:50,987  INFO      apriori_distributed — k=5: no frequent itemsets — stopping.
+2026-05-06 15:07:50,989  INFO      __main__ —   → support=1.0%  elapsed=168.272s  frequent=1857  max_k=4
+2026-05-06 15:07:50,989  INFO      __main__ — 
+============================================================
+Running Apriori  support=0.5%  (abs=103)
+============================================================
+2026-05-06 15:07:51,630  INFO      apriori_distributed — Phase 1 complete: 1503 frequent 1-itemsets.
+2026-05-06 15:07:54,284  INFO      apriori_distributed — k=2: 1128753 candidates generated.
+2026-05-06 15:17:20,259  INFO      apriori_distributed — k=2: 7445 frequent itemsets found.
+2026-05-06 15:17:20,778  INFO      apriori_distributed — k=3: 96712 candidates generated.
+2026-05-06 15:18:08,877  INFO      apriori_distributed — k=3: 5457 frequent itemsets found.
+2026-05-06 15:18:08,970  INFO      apriori_distributed — k=4: 6979 candidates generated.
+2026-05-06 15:18:12,152  INFO      apriori_distributed — k=4: 2121 frequent itemsets found.
+2026-05-06 15:18:12,167  INFO      apriori_distributed — k=5: 993 candidates generated.
+2026-05-06 15:18:12,709  INFO      apriori_distributed — k=5: 368 frequent itemsets found.
+2026-05-06 15:18:12,711  INFO      apriori_distributed — k=6: 53 candidates generated.
+2026-05-06 15:18:13,180  INFO      apriori_distributed — k=6: 29 frequent itemsets found.
+2026-05-06 15:18:13,180  INFO      apriori_distributed — k=7: no candidates generated — stopping.
+2026-05-06 15:18:13,185  INFO      __main__ —   → support=0.5%  elapsed=626.312s  frequent=16923  max_k=6
+2026-05-06 15:18:14,180  INFO      __main__ — Results written to /home/komputer7/SparkProjects/online-retail-pyspark/logs/apriori_results.md
+2026-05-06 15:18:14,182  INFO      py4j.clientserver — Closing down clientserver connection

@@ -166,3 +166,103 @@ def save_markdown_report(content: str, output_path: str | Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     return path
+
+
+def _add_word_table(document, headers: list[str], rows: list[list[object]]) -> None:
+    table = document.add_table(rows=1, cols=len(headers))
+    table.style = "Light List Accent 1"
+    header_cells = table.rows[0].cells
+    for i, header in enumerate(headers):
+        header_cells[i].text = str(header)
+
+    for row in rows:
+        cells = table.add_row().cells
+        for i, value in enumerate(row):
+            cells[i].text = str(value)
+
+
+def save_apriori_word_report(
+    *,
+    title: str,
+    dataset_name: str,
+    output_path: str | Path,
+    execution_df: Optional[pd.DataFrame] = None,
+    all_freq: Optional[Mapping[int, Mapping[frozenset, int]]] = None,
+    rules_df: Optional[pd.DataFrame] = None,
+    notes: Optional[list[str]] = None,
+    decode_itemset: Optional[Callable[[frozenset], object]] = None,
+) -> Path:
+    """Create a simple .docx Apriori report and return the saved path."""
+    from docx import Document
+
+    document = Document()
+    document.add_heading(title, level=1)
+    document.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    document.add_paragraph(f"Dataset: {dataset_name}")
+
+    if execution_df is not None and not execution_df.empty:
+        document.add_heading("Execution Summary", level=2)
+        rows: list[list[object]] = []
+        for _, row in execution_df.iterrows():
+            rows.append(
+                [
+                    f"{float(row.get('min_support', 0.0)):.4f}",
+                    int(row.get("abs_support_count", 0)),
+                    f"{float(row.get('execution_time_sec', 0.0)):.6f}",
+                    int(row.get("l1_count", 0)),
+                    int(row.get("l2_count", 0)),
+                    int(row.get("l3_count", 0)),
+                ]
+            )
+        _add_word_table(
+            document,
+            [
+                "Min Support",
+                "Abs Support",
+                "Execution Time (s)",
+                "L1 Count",
+                "L2 Count",
+                "L3 Count",
+            ],
+            rows,
+        )
+
+    if all_freq:
+        document.add_heading("Frequent Itemsets", level=2)
+        for k in sorted(all_freq):
+            document.add_heading(f"L{k}", level=3)
+            top = sorted(all_freq[k].items(), key=lambda x: x[1], reverse=True)[:5]
+            rows = []
+            for itemset, count in top:
+                decoded = decode_itemset(itemset) if decode_itemset else itemset
+                rows.append([_itemset_to_text(decoded), int(count)])
+            _add_word_table(document, ["Itemset", "Count"], rows)
+
+    if rules_df is not None and not rules_df.empty:
+        required = {"rule", "support", "confidence", "lift"}
+        if required.issubset(rules_df.columns):
+            document.add_heading("Association Rules", level=2)
+            view = rules_df.sort_values(
+                by=["confidence", "lift", "support"], ascending=False
+            ).head(10)
+            rows = []
+            for _, row in view.iterrows():
+                rows.append(
+                    [
+                        row["rule"],
+                        f"{float(row['support']):.4f}",
+                        f"{float(row['confidence']):.4f}",
+                        f"{float(row['lift']):.2f}",
+                    ]
+                )
+            _add_word_table(document, ["Rule", "Support", "Confidence", "Lift"], rows)
+
+    if notes:
+        document.add_heading("Notes", level=2)
+        for note in notes:
+            document.add_paragraph(str(note), style="List Bullet")
+
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    document.save(str(path))
+    return path

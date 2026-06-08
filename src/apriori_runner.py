@@ -20,6 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STAGING_CSV  = PROJECT_ROOT / "data" / "staging" / "online_retail.csv"
 LOG_DIR      = PROJECT_ROOT / "logs"
 RESULT_MD    = LOG_DIR / "apriori_results.md"
+RESULT_DOCX  = LOG_DIR / "apriori_results.docx"
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -44,6 +45,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from apriori_distributed import DistributedApriori   # noqa: E402  (after sys.path)
 from report_generation import (                        # noqa: E402
     build_apriori_markdown_report,
+    save_apriori_word_report,
     save_markdown_report,
 )
 from spark_session import create_spark_session        # noqa: E402
@@ -166,6 +168,13 @@ def _write_results_md(results: list[dict], n_txn: int) -> None:
     )
 
     save_markdown_report(content, RESULT_MD)
+    save_apriori_word_report(
+        title="Distributed Apriori - Benchmark Results",
+        dataset_name="Online Retail",
+        execution_df=execution_df,
+        notes=notes,
+        output_path=RESULT_DOCX,
+    )
 
 
 # ---------------------------------------------------------------------------
